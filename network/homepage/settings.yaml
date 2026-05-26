@@ -1,0 +1,37 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/settings
+
+
+title : My Server
+hideVersion: true
+bookmarksStyle: icons 
+
+background:
+  image: /images/background.png
+  blur: sm 
+  saturate: 75 
+  brightness: 60 
+  opacity: 60 
+
+theme: dark
+color: gray
+cardBlur: md
+
+layout:
+  Homepage:
+    style: row
+  Liens:
+    style: row
+  Ressources:
+    style: row
+    columns: 3
+  Core:
+    style: row
+    columns: 1
+  VPN:
+    style: row
+    columns: 1
+  Media:
+    style: row
+    columns: 2

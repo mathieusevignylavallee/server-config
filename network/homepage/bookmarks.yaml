@@ -1,0 +1,24 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/bookmarks
+
+    
+- Liens:
+  - Github:
+      - icon: github.png
+        href: https://github.com/
+  - ChatGPT:
+      - icon: chatgpt.png
+        href: https://chatgpt.com/
+  - Youtube:
+      - icon: youtube.png
+        href: https://www.youtube.com/
+  - Reddit:
+      - icon: reddit.png
+        href: https://reddit.com/
+  - Gmail:
+      - icon: gmail.png
+        href: https://mail.google.com/mail/
+  - Google:
+      - icon: google.png
+        href: https://www.google.ca/

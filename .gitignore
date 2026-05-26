@@ -1,0 +1,24 @@
+# Sensitive files
+.env
+*.pem
+*.key
+*.crt
+.htpasswd
+network/homepage/services.yaml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+/docker/*/data
+/docker/**/data
+
+# Log files
+*.log
+/logs/*
+**/logs/
+
+# IDE files
+.vscode/
+.idea/

@@ -1,0 +1,136 @@
+services:
+  # Nginx reverse proxy
+  nginx:
+    image: lscr.io/linuxserver/nginx:latest
+    container_name: nginx
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - ./nginx/default.conf:/config/nginx/site-confs/default.conf
+      - /docker/nginx/config:/config
+      - /etc/ssl:/etc/ssl:ro
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    cpu_shares: 512
+    mem_limit: 256m
+
+  # Glances - Monitoring System
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    pid: "host"
+    ports:
+      - 61208:61208
+    volumes:
+      - /docker/glances:/glances_conf
+      - /mnt/disk2:/mnt/disk2
+      - /mnt/disk1:/mnt/disk1
+      - /:/systemstorage
+    environment:
+      GLANCES_OPT: "-w"  # Web server mode
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # Homepage - Dashboard web
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    environment:
+      PUID: ${PUID} 
+      PGID: ${PGID}  
+      HOMEPAGE_ALLOWED_HOSTS: '*'
+    ports:
+      - 3000:3000
+    volumes:
+      - ./homepage/:/app/config
+      - ./homepage/images:/app/public/images
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/disk2:/mnt/disk2
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    cpu_shares: 512
+    mem_limit: 256m
+
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns
+    container_name: cloudflare-ddns
+    environment:
+      - API_KEY=${CD_API_KEY}
+      - ZONE=${DOMAIN}
+      - SUBDOMAIN=
+      - PROXIED=true
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    cpu_shares: 256
+    mem_limit: 128m
+
+  # cloudflare-ddns-minecraft:
+  #   image: oznu/cloudflare-ddns
+  #   container_name: cloudflare-ddns-minecraft
+  #   restart: always
+  #   environment:
+  #     - API_KEY=${CD_API_KEY}
+  #     - ZONE=${DOMAIN}
+  #     - SUBDOMAIN=minecraft
+  #     - PROXIED=False
+  #   networks:
+  #     - network-docker-server
+  #   restart: unless-stopped
+
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    ports:
+      - 8383:80
+    volumes:
+      - /mnt/disk1/games:/srv
+      - /docker/filebrowser/config:/config
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    cpu_shares: 512
+    mem_limit: 256m
+
+networks:
+  network-docker-server:
+    external: true

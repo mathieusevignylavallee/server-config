@@ -1,0 +1,139 @@
+
+- Homepage:
+  - My Server Homepage:
+      text_size: x1
+      text: My Server
+
+- Ressources:
+  - INFO:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: info
+  - RAM:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: memory
+  - NETWORK:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: network:eth0
+  - STORAGE SYSTEM:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: fs:/systemstorage
+  - STORAGE ANIME/SERIES:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: fs:/mnt/disk2
+  - STORAGE MOVIES:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: fs:/mnt/disk1
+  - USAGE SYSTEM:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: disk:sda
+  - USAGE ANIME/SERIES:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: disk:sdc
+  - USAGE MOVIES:
+      widget:
+        type: glances
+        url: http://glances:61208
+        version: 4
+        metric: disk:sdb
+- Core:
+  - Portainer:
+          icon: portainer.png
+          href: https://YOUR_SERVER_IP:9443
+          widget:
+            type: portainer
+            url: https://YOUR_SERVER_IP:9443
+            env: 3
+            key: your_portainer_api_key
+- VPN:
+  - Gluetun:
+        icon: gluetun.png
+        widget:
+          type: gluetun
+          url: http://gluetun:8000
+- Media:
+  - Jellyfin:
+      icon: jellyfin.png
+      href: https://example.com/jellyfin
+      widget:
+        type: jellyfin
+        url: https://example.com/jellyfin
+        key: your_jellyfin_api_key
+        enableBlocks: true
+        fields: ["movies", "series", "episodes"]
+        enableNowPlaying: true
+        enableUser: true
+        enableMediaControl: false
+        showEpisodeNumber: true
+        expandOneStreamToTwoRows: false
+  - Sonarr:
+      icon: sonarr.png
+      href: http://YOUR_SERVER_IP:8989
+      widget:
+        type: sonarr
+        fields: ["wanted", "missing", "queued"]
+        url: http://sonarr:8989
+        key: your_sonarr_api_key
+  - Radarr:
+      icon: radarr.png
+      href: http://YOUR_SERVER_IP:7878
+      widget:
+        type: radarr
+        fields: ["wanted", "missing", "queued"]
+        url: http://radarr:7878
+        key: your_radarr_api_key
+  - qBittorrent:
+      icon: qbittorrent.png
+      href: http://YOUR_SERVER_IP:8081/
+      widget:
+        type: qbittorrent
+        fields: ["leech", "download", "seed", "upload"]
+        url: http://gluetun:8081
+        username: your_qbt_username
+        password: your_qbt_password
+        enableLeechProgress: true
+  - Bazarr:
+        icon: bazarr.png
+        href: http://YOUR_SERVER_IP:6767/
+        widget:
+          type: bazarr
+          url: http://bazarr:6767
+          key: your_bazarr_api_key
+  - Prowlarr:
+        icon: prowlarr.png
+        href: http://YOUR_SERVER_IP:9696
+        widget:
+          type: prowlarr
+          url: http://gluetun:9696
+          key: your_prowlarr_api_key
+  - Tdarr:
+        icon: tdarr.png
+        href: http://YOUR_SERVER_IP:8265
+        widget:
+          type: tdarr
+          fields: ["queue", "processed", "errored", "saved"]
+          url: http://tdarr:8265
+          key: your_tdarr_api_key

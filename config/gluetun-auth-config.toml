@@ -1,0 +1,4 @@
+[[roles]]
+name = "public-ip"
+routes = ["GET /v1/publicip/ip"]
+auth = "none"

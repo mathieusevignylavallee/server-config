@@ -1,0 +1,239 @@
+services:
+
+  # Gluetun (VPN container)
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN 
+    devices:
+      - /dev/net/tun
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      HTTP_CONTROL_SERVER_AUTH_CONFIG_FILEPATH: /gluetun/auth/config.toml
+      VPN_SERVICE_PROVIDER: ${GT_VPN_SERVICE_PROVIDER}
+      VPN_TYPE: ${GT_VPN_TYPE}
+      WIREGUARD_PRIVATE_KEY: ${GT_WIREGUARD_PRIVATE_KEY}
+      WIREGUARD_PRESHARED_KEY: ${GT_WIREGUARD_PRESHARED_KEY}
+      WIREGUARD_ADDRESSES: ${GT_WIREGUARD_ADDRESSES}
+      FIREWALL_VPN_INPUT_PORTS: ${GT_FIREWALL_VPN_INPUT_PORTS}
+      VPN_PORT_FORWARDING_LISTENING_PORT: ${GT_VPN_PORT_FORWARDING_LISTENING_PORT}
+      SERVER_COUNTRIES: ${GT_SERVER_COUNTRIES}
+    volumes:
+      - /docker/gluetun/config:/gluetun
+      - ../config/gluetun-auth-config.toml:/gluetun/auth/config.toml:ro
+    networks:
+      - network-docker-server
+    ports:
+      - 8081:8081
+      - 9696:9696
+      - 8191:8191
+    restart: unless-stopped
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # qBittorrent
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      WEBUI_PORT: ${QT_WEBUI_PORT}
+      TORRENTING_PORT: ${QT_TORRENTING_PORT}
+    volumes:
+      - /docker/qbittorrent/appdata:/config
+      - /mnt/disk2/media/downloads/incomplete:/media/downloads/incomplete
+      - /mnt/disk2/media/downloads/sonarr:/media/downloads/sonarr
+      - /mnt/disk2/media/downloads/sonarrAnime:/media/downloads/sonarrAnime
+      - /mnt/disk1/media/downloads/radarr:/media/downloads/radarr
+      - /mnt/disk1/games:/media/downloads/games
+    restart: unless-stopped
+    depends_on:
+      - gluetun
+    cpu_shares: 3072
+    mem_limit: 1024m
+
+  # FlareSolverr (via VPN)
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: "service:gluetun"
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      LOG_LEVEL: ${FS_LOG_LEVEL:-info}
+      LOG_HTML: ${FS_LOG_HTML:-false}
+      CAPTCHA_SOLVER: ${FS_CAPTCHA_SOLVER:-none}
+    restart: unless-stopped
+    depends_on:
+      - gluetun
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # Prowlarr (via VPN)
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - /docker/prowlarr/data:/config
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # Jellyfin (Streaming)
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    cpu_shares: 4096
+    mem_limit: 5g
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
+    volumes:
+      - /docker/jellyfin/library:/config
+      - /mnt/disk2/media/anime:/media/anime
+      - /mnt/disk2/media/tvseries:/media/tvseries
+      - /mnt/disk1/media/movies:/media/movies
+    ports:
+      - 8096:8096
+    networks:
+      - network-docker-server
+    runtime: nvidia
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+    restart: unless-stopped
+
+  # Bazarr (Sous-titres)
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - /docker/bazarr/config:/config
+      - /mnt/disk2/media/anime:/media/anime
+      - /mnt/disk2/media/tvseries:/media/tvseries
+      - /mnt/disk1/media/movies:/media/movies
+    ports:
+      - 6767:6767
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # Radarr (Gestion des films)
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - /docker/radarr/data:/config
+      - /mnt/disk1/media:/media
+    networks:
+      network-docker-server:
+        ipv4_address: 192.168.1.100
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  # Sonarr (Gestion des séries)
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - /docker/sonarr/data:/config
+      - /mnt/disk2/media:/media
+    networks:
+      network-docker-server:
+        ipv4_address: 192.168.1.101
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    cpu_shares: 1024
+    mem_limit: 512m
+
+  arr-stalled-handler:
+    image: tommythebeast/arrstalledhandler:latest
+    container_name: ArrStalledHandler
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      RADARR_URL: "http://radarr:7878"
+      RADARR_API_KEY: ${ARH_RADARR_API_KEY}
+      SONARR_URL: "http://sonarr:8989"
+      SONARR_API_KEY: ${ARH_SONARR_API_KEY}
+      STALLED_TIMEOUT: ${ARH_STALLED_TIMEOUT}
+      STALLED_ACTION: ${ARH_STALLED_ACTION}
+      VERBOSE: ${ARH_VERBOSE}
+      RUN_INTERVAL: ${ARH_RUN_INTERVAL}
+      COUNT_DOWNLOADING_METADATA_AS_STALLED: ${ARH_COUNT_DOWNLOADING_METADATA_AS_STALLED}
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+    cpu_shares: 512
+    mem_limit: 256m
+
+  # Tdarr (replaces unmanic-* services)
+  tdarr:
+    image: haveagitgat/tdarr:latest
+    container_name: tdarr
+    cpu_shares: 4096
+    mem_limit: 4g
+    ports:
+      - 8265:8265
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      serverPort: 8266
+      webUIPort: 8265
+      internalNode: true
+      maxLogSizeMB: 10
+      NVIDIA_DRIVER_CAPABILITIES: all
+      NVIDIA_VISIBLE_DEVICES: all
+    volumes:
+      - /docker/tdarr/configs:/app/configs
+      - /mnt/disk1/media:/media
+      - /mnt/disk2/media:/media2
+      - /docker/tdarr/transcode:/transcode
+      - /docker/tdarr/server:/app/server
+      - /docker/tdarr/logs:/app/logs
+    runtime: nvidia
+    networks:
+      - network-docker-server
+    restart: unless-stopped
+
+networks:
+  network-docker-server:
+    external: true
