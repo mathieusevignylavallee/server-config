@@ -1,3 +1,6 @@
+# Generated files
+network/nginx/default.conf
+
 # Sensitive files
 .env
 *.pem
